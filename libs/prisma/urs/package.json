@@ -1,0 +1,31 @@
+{
+  "name": "@investment/urs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "@investment/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "nx": {
+    "name": "urs"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "scripts": {
+    "generate": "pnpm prisma generate --schema=src/schema.prisma",
+    "migrate": "pnpm prisma migrate dev --schema=src/schema.prisma",
+    "reset": "pnpm prisma migrate reset --schema=src/schema.prisma",
+    "seed:urs": "npx tsx src/commands/seed-urs.ts",
+    "migrate:siar": "npx tsx src/commands/migrate-siar.ts"
+  },
+}

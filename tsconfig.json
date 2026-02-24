@@ -11,6 +11,9 @@
     },
     {
       "path": "./apps/urs-web"
+    },
+    {
+      "path": "./libs/prisma/urs"
     }
   ]
 }

@@ -27,5 +27,5 @@
     "reset": "pnpm prisma migrate reset --schema=src/schema.prisma",
     "seed:urs": "npx tsx src/commands/seed-urs.ts",
     "migrate:siar": "npx tsx src/commands/migrate-siar.ts"
-  },
+  }
 }

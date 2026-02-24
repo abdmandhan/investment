@@ -1,3 +1,6 @@
+import { prisma } from '@investment/urs';
+
 export async function GET(request: Request) {
-  return new Response('Hello, from API!');
+  const users = await prisma.users.findMany();
+  return new Response(JSON.stringify(users));
 }

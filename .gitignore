@@ -48,3 +48,6 @@ test-output
 out
 
 .env
+
+libs/prisma/urs/generated
+libs/prisma/siar/generated

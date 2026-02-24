@@ -33,6 +33,8 @@ enum TransactionType {
   REDEMPTION
   SWITCHING_IN
   SWITCHING_OUT
+  ADJUSTMENT_UP
+  ADJUSTMENT_DOWN
 }
 
 model risk_levels {
@@ -41,14 +43,6 @@ model risk_levels {
   created_at DateTime    @default(now())
   updated_at DateTime    @updatedAt
   investors  investors[]
-}
-
-model transaction_types {
-  id           Int            @id @default(autoincrement())
-  name         String         @unique
-  created_at   DateTime       @default(now())
-  updated_at   DateTime       @updatedAt
-  transactions transactions[]
 }
 
 model agent_levels {
@@ -108,21 +102,15 @@ model provinces {
 }
 
 model references {
-  id                 Int      @id @default(autoincrement())
-  reference_group_id Int
-  code               String
-  name               String
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  reference_name String
+  code           String
+  name           String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
-  @@unique([reference_group_id, code])
-}
-
-model reference_groups {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  @@unique([reference_name, code])
+  @@index([reference_name, code])
 }
 
 // end of references table
@@ -495,10 +483,8 @@ model transactions {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
-  transaction_banks   transaction_banks[]
-  investor_holdings   investor_holdings[]
-  transaction_types   transaction_types?  @relation(fields: [transaction_typesId], references: [id])
-  transaction_typesId Int?
+  transaction_banks transaction_banks[]
+  investor_holdings investor_holdings[]
 }
 
 // tracking transfer history
@@ -539,11 +525,28 @@ model aum_investor_daily {
   @@index([fund_id, date])
 }
 
+// will store daily aum data for all funds & investors, for specific date, it will also used for aum generator verification
+model aum_daily {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @db.Date
+  aum_value      Decimal  @db.Decimal(30, 2)
+  management_fee Decimal  @db.Decimal(30, 2)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@unique([date])
+  @@index([date])
+}
+
 model users {
   id                 Int          @id @default(autoincrement())
   name               String       @db.VarChar(128)
   username           String       @unique
+  email              String?      @unique
+  phone_number       String?      @db.VarChar(32)
+  avatar             String?
   password           String       @db.VarChar(128)
+  is_active          Boolean      @default(true) // false -> deleted
   created_at         DateTime     @default(now())
   updated_at         DateTime     @updatedAt
   user_roles         user_roles[]
@@ -567,6 +570,8 @@ model user_roles {
 model roles {
   id               Int                @id @default(autoincrement())
   name             String             @unique
+  color            String?
+  description      String?
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   user_roles       user_roles[]
@@ -631,4 +636,20 @@ model journal_details {
   updated_at DateTime @updatedAt
 
   journal journals @relation(fields: [journal_id], references: [id])
+}
+
+// http logs only stored for 1 month
+model http_logs {
+  id         Int      @id @default(autoincrement())
+  ip_address String
+  user_agent String
+  method     String
+  path       String
+  status     Int
+  error      String?
+  request    Json
+  response   Json?
+  duration   Int      @default(0) // in milliseconds
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

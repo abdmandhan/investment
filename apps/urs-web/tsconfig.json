@@ -46,6 +46,9 @@
   ],
   "references": [
     {
+      "path": "../../libs/react/ui"
+    },
+    {
       "path": "../../libs/prisma/urs"
     }
   ]

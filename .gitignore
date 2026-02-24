@@ -51,3 +51,5 @@ out
 
 libs/prisma/urs/generated
 libs/prisma/siar/generated
+
+vite.config.*.timestamp*

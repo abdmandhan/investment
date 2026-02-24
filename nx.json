@@ -63,6 +63,20 @@
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
       }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
     }
   ],
   "targetDefaults": {
@@ -76,9 +90,14 @@
         "style": "tailwind",
         "linter": "none"
       }
+    },
+    "@nx/react": {
+      "library": {
+        "unitTestRunner": "none"
+      }
     }
   },
-  "tui":{
+  "tui": {
     "enabled": false
   }
 }

@@ -8,6 +8,9 @@
     },
     {
       "path": "./apps/urs-api"
+    },
+    {
+      "path": "./apps/urs-web"
     }
   ]
 }

@@ -316,6 +316,7 @@ model investors {
   investor_holdings    investor_holdings[]
   aum_investor_daily   aum_investor_daily[]
   agent_investors      agent_investors[]
+  transactions         transactions[]
 }
 
 model investor_accounts {
@@ -485,6 +486,7 @@ model transactions {
 
   transaction_banks transaction_banks[]
   investor_holdings investor_holdings[]
+  investor          investors           @relation(fields: [investor_id], references: [id])
 }
 
 // tracking transfer history

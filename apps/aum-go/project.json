@@ -1,0 +1,30 @@
+{
+  "name": "aum-go",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/aum-go",
+  "targets": {
+    "run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go run .",
+        "cwd": "apps/aum-go"
+      },
+      "configurations": {
+        "with-verify": {
+          "command": "go run . --verify",
+          "cwd": "apps/aum-go"
+        }
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go build -o dist/aum-go .",
+        "cwd": "apps/aum-go"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    }
+  },
+  "tags": ["npm:private"]
+}

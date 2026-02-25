@@ -6,8 +6,12 @@
     "name": "urs-web"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.33.0",
+    "@emotion/react": "^11.14.0",
     "next": "~16.0.1",
+    "next-themes": "^0.4.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0"
   }
 }

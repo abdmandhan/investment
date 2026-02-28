@@ -6,8 +6,23 @@
     "name": "urs-web"
   },
   "dependencies": {
+    "@internationalized/date": "^3.11.0",
+    "@react-stately/utils": "^3.11.0",
+    "@tailwindcss/postcss": "^4.2.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "@untitledui/file-icons": "^0.0.9",
+    "@untitledui/icons": "^0.0.21",
     "next": "~16.0.1",
+    "next-themes": "^0.4.6",
+    "postcss": "^8.5.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-aria": "^3.46.0",
+    "react-aria-components": "^1.15.1",
+    "react-dom": "^19.0.0",
+    "recharts": "^3.7.0",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "tailwindcss-react-aria-components": "^2.0.1"
   }
 }

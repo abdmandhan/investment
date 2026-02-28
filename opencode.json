@@ -4,6 +4,11 @@
       "type": "local",
       "command": ["npx", "nx", "mcp"],
       "enabled": true
+    },
+    "tanstack": {
+      "type": "local",
+      "command": ["npx", "@tanstack/cli", "mcp"],
+      "enabled": true
     }
   }
 }

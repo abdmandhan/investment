@@ -1,4 +1,6 @@
-import './global.css';
+import AppLayout from '@/components/layout/app-layout';
+// import './global.css';
+import "@/styles/globals.css";
 
 export const metadata = {
   title: 'Welcome to urs-web',
@@ -11,8 +13,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className='dark-mode'>
+      <body>
+        <AppLayout>{children}</AppLayout>
+      </body>
     </html>
   );
 }

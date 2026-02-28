@@ -95,9 +95,7 @@ const InvestorsTable = () => {
         <Table.Header>
           <Table.Head id="name" label="Name" isRowHeader allowsSorting className="w-full max-w-1/4" />
           <Table.Head id="status" label="Status" allowsSorting />
-          <Table.Head id="role" label="Role" allowsSorting />
           <Table.Head id="email" label="Email address" allowsSorting className="md:hidden xl:table-cell" />
-          <Table.Head id="teams" label="Teams" />
           <Table.Head id="actions" />
         </Table.Header>
 
@@ -115,23 +113,7 @@ const InvestorsTable = () => {
                   {item.status === "active" ? "Active" : "Inactive"}
                 </BadgeWithDot>
               </Table.Cell>
-              <Table.Cell className="whitespace-nowrap">{item.role}</Table.Cell>
               <Table.Cell className="whitespace-nowrap md:hidden xl:table-cell">{item.email ?? "—"}</Table.Cell>
-              <Table.Cell>
-                <div className="flex gap-1">
-                  {item.teams.slice(0, 3).map((team) => (
-                    <Badge key={team.name} color={team.color as BadgeColor<BadgeTypes>} size="sm">
-                      {team.name}
-                    </Badge>
-                  ))}
-                  {item.teams.length > 3 && (
-                    <Badge color="gray" size="sm">
-                      +{item.teams.length - 3}
-                    </Badge>
-                  )}
-                  {item.teams.length === 0 && <span className="text-muted text-sm">—</span>}
-                </div>
-              </Table.Cell>
               <Table.Cell className="px-3">
                 <div className="flex justify-end gap-0.5">
                   <ButtonUtility size="xs" color="tertiary" tooltip="Delete" icon={Trash01} />

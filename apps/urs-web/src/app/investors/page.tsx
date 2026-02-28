@@ -1,13 +1,11 @@
-'use client';
-
+'use client';;
 import { useMemo, useState } from "react";
 import { Edit01, Trash01 } from "@untitledui/icons";
 import type { SortDescriptor } from "react-aria-components";
 import { PaginationCardMinimal } from "@/components/application/pagination/pagination";
 import { Table, TableCard, TableRowActionsDropdown } from "@/components/application/table/table";
 import { Avatar } from "@/components/base/avatar/avatar";
-import type { BadgeTypes } from "@/components/base/badges/badge-types";
-import { Badge, type BadgeColor, BadgeWithDot } from "@/components/base/badges/badges";
+import { BadgeWithDot } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { trpc } from "@/trpc/client";
 

@@ -64,7 +64,7 @@ export const FundPerformanceTable = ({
         title="Top Performing Funds"
         badge={funds.length}
       />
-      <Table.Root>
+      <Table>
         <Table.Header>
           <Table.Head label="Fund" />
           <Table.Head label="NAV" />
@@ -119,7 +119,7 @@ export const FundPerformanceTable = ({
             </Table.Row>
           ))}
         </Table.Body>
-      </Table.Root>
+      </Table>
     </TableCard.Root>
   );
 };
@@ -180,7 +180,7 @@ export const AgentRankingTable = ({
         title="Agent Performance Ranking"
         badge={agents.length}
       />
-      <Table.Root>
+      <Table>
         <Table.Header>
           <Table.Head label="Rank" />
           <Table.Head label="Agent" />
@@ -218,7 +218,7 @@ export const AgentRankingTable = ({
             </Table.Row>
           ))}
         </Table.Body>
-      </Table.Root>
+      </Table>
     </TableCard.Root>
   );
 };
@@ -273,7 +273,7 @@ export const TopInvestorsTable = ({
         title="Top Investors by AUM"
         badge={investors.length}
       />
-      <Table.Root>
+      <Table>
         <Table.Header>
           <Table.Head label="Investor" />
           <Table.Head label="AUM" />
@@ -297,7 +297,7 @@ export const TopInvestorsTable = ({
             </Table.Row>
           ))}
         </Table.Body>
-      </Table.Root>
+      </Table>
       <div className="px-5 py-3 border-t border-secondary">
         <Button color="link-gray" size="sm" iconTrailing={ChevronRight}>
           View all investors

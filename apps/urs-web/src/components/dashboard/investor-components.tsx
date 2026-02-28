@@ -1,8 +1,7 @@
 "use client";
 
 import { Table, TableCard } from "@/components/application/table/table";
-import { Badge } from "@/components/base/badges/badges";
-import { TrendUp01, TrendDown01, Plus, ArrowRight } from "@untitledui/icons";
+import { TrendUp01, TrendDown01, Plus } from "@untitledui/icons";
 import { cx } from "@/utils/cx";
 import { Button } from "@/components/base/buttons/button";
 
@@ -43,20 +42,20 @@ export const HoldingsTable = ({
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
       currency: 'IDR',
-      maximumFractionDigits: 0 
+      maximumFractionDigits: 0
     }).format(value);
   };
 
   return (
     <TableCard.Root className={className}>
-      <TableCard.Header 
-        title="Your Holdings" 
+      <TableCard.Header
+        title="Your Holdings"
         badge={holdings.length}
       />
-      <Table.Root>
+      <Table>
         <Table.Header>
           <Table.Head label="Fund" />
           <Table.Head label="Units" />
@@ -68,7 +67,7 @@ export const HoldingsTable = ({
             <Table.Row key={holding.fundId}>
               <Table.Cell>
                 <div className="flex items-center gap-3">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: holding.color || '#7F56D9' }}
                   />
@@ -103,7 +102,7 @@ export const HoldingsTable = ({
             </Table.Row>
           ))}
         </Table.Body>
-      </Table.Root>
+      </Table>
       {holdings.length === 0 && (
         <div className="px-5 py-8 text-center">
           <p className="text-tertiary mb-4">You don't have any holdings yet</p>
@@ -160,11 +159,11 @@ export const AvailableFundsList = ({
         {funds.map((fund) => (
           <div key={fund.id} className="flex items-center justify-between px-5 py-4 hover:bg-secondary/50 transition-colors">
             <div className="flex items-center gap-3">
-              <div 
+              <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: `${fund.color}20` || '#F4EBFF' }}
               >
-                <span 
+                <span
                   className="text-lg font-bold"
                   style={{ color: fund.color || '#7F56D9' }}
                 >
@@ -193,8 +192,8 @@ export const AvailableFundsList = ({
                 )}
                 <span>{fund.navChange > 0 ? '+' : ''}{fund.navChange}%</span>
               </div>
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 color="primary"
                 onClick={() => onSubscribe?.(fund.id)}
               >
@@ -253,8 +252,8 @@ export const StatementsList = ({
       </div>
       <div className="divide-y divide-secondary">
         {statements.map((statement) => (
-          <div 
-            key={statement.id} 
+          <div
+            key={statement.id}
             className="flex items-center justify-between px-5 py-3 hover:bg-secondary/50 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -265,8 +264,8 @@ export const StatementsList = ({
               </div>
               <span className="text-secondary">{statement.month}</span>
             </div>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               color="secondary"
               disabled={!statement.available}
               onClick={() => onDownload?.(statement.id)}

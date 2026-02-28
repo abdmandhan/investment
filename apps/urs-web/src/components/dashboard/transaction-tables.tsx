@@ -106,7 +106,7 @@ export const TransactionsTable = ({
           </Button>
         )}
       />
-      <Table.Root>
+      <Table>
         <Table.Header>
           <Table.Head label="Type" />
           {showInvestor && <Table.Head label="Investor" />}
@@ -177,7 +177,7 @@ export const TransactionsTable = ({
             );
           })}
         </Table.Body>
-      </Table.Root>
+      </Table>
       {transactions.length > maxRows && (
         <div className="flex justify-center py-3 border-t border-secondary">
           <Button color="link-gray" size="sm">

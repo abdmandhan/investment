@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@investment/urs";
-import { TransactionType } from "@prisma/generated/urs";
 
 export async function GET() {
   try {

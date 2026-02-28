@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import prisma from "@investment/urs";
-import { TransactionType } from "@prisma/generated/urs";
+import prisma, { TransactionType } from "@investment/urs";
 
 export async function GET() {
   try {
@@ -12,9 +11,9 @@ export async function GET() {
     }
 
     // Check if user has commissioner role or admin permissions
-    const hasAccess = session.user.roles.includes("commissioner") || 
-                      session.user.roles.includes("admin") ||
-                      session.user.permissions.includes("dashboard:commissioner:view");
+    const hasAccess = session.user.roles.includes("commissioner") ||
+      session.user.roles.includes("admin") ||
+      session.user.permissions.includes("dashboard:commissioner:view");
 
     if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -42,7 +41,7 @@ export async function GET() {
 
     const totalAUM = currentAUM?.aum_value || 0;
     const previousAUMValue = previousAUM?.aum_value || totalAUM;
-    const aumChange = totalAUM > 0 && previousAUMValue > 0 
+    const aumChange = totalAUM > 0 && previousAUMValue > 0
       ? Number(((Number(totalAUM) - Number(previousAUMValue)) / Number(previousAUMValue) * 100).toFixed(2))
       : 0;
 
@@ -116,10 +115,10 @@ export async function GET() {
     const topPerformingFunds = topFunds.map(fund => {
       const currentNAV = fund.fund_navs[0]?.nav_per_unit || 0;
       const previousNAV = fund.fund_navs[1]?.nav_per_unit || currentNAV;
-      const performance = previousNAV > 0 
+      const performance = previousNAV > 0
         ? Number(((Number(currentNAV) - Number(previousNAV)) / Number(previousNAV) * 100).toFixed(2))
         : 0;
-      
+
       return {
         id: fund.id,
         name: fund.name,

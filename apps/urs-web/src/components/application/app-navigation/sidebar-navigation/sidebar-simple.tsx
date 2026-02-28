@@ -1,8 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SearchLg } from "@untitledui/icons";
-import { Input } from "@/components/base/input/input";
 import { UntitledLogo } from "@/components/foundations/logo/untitledui-logo";
 import { cx } from "@/utils/cx";
 import { MobileNavigationHeader } from "../base-components/mobile-header";

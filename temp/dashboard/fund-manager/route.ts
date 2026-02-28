@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import prisma from "@investment/urs";
-import { TransactionType } from "@prisma/generated/urs";
+import prisma, { TransactionType } from "@investment/urs";
 
 export async function GET(request: Request) {
   try {
@@ -12,9 +11,9 @@ export async function GET(request: Request) {
     }
 
     // Check if user has fund manager role
-    const hasAccess = session.user.roles.includes("fund_manager") || 
-                      session.user.roles.includes("admin") ||
-                      session.user.permissions.includes("dashboard:fund_manager:view");
+    const hasAccess = session.user.roles.includes("fund_manager") ||
+      session.user.roles.includes("admin") ||
+      session.user.permissions.includes("dashboard:fund_manager:view");
 
     if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -32,7 +31,7 @@ export async function GET(request: Request) {
     const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
     // Get funds under management
-    const fundsQuery = fundIdParam 
+    const fundsQuery = fundIdParam
       ? { id: parseInt(fundIdParam), is_active: true }
       : { is_active: true };
 
@@ -109,17 +108,17 @@ export async function GET(request: Request) {
       const aum = aumPerFund.find(a => a.fund_id === fund.id)?._sum.aum_value || 0;
       const latestNAV = latestNAVs.find(n => n?.fund_id === fund.id);
       const history = navHistoryByFund[fund.id] || [];
-      
+
       // Calculate performance
       const currentNAV = latestNAV?.nav_per_unit || fund.initial_nav_per_unit;
       const initialNAV = fund.initial_nav_per_unit;
-      const ytdReturn = initialNAV > 0 
+      const ytdReturn = initialNAV > 0
         ? Number(((Number(currentNAV) - Number(initialNAV)) / Number(initialNAV) * 100).toFixed(2))
         : 0;
 
       // Calculate 30-day return
       const nav30DaysAgo = history.length > 0 ? history[0].nav : Number(currentNAV);
-      const return30d = nav30DaysAgo > 0 
+      const return30d = nav30DaysAgo > 0
         ? Number(((Number(currentNAV) - nav30DaysAgo) / nav30DaysAgo * 100).toFixed(2))
         : 0;
 

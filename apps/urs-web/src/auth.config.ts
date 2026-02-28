@@ -8,6 +8,7 @@ export const authConfig = {
     error: "/login",
   },
   secret: process.env.AUTH_SECRET,
+  trustHost: true,
   providers: [],
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {

@@ -73,7 +73,7 @@ export const {
         );
 
         return {
-          id: user.id,
+          id: String(user.id),
           name: user.name,
           email: user.email,
           username: user.username,

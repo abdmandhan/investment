@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import prisma from "@investment/urs";
-import { TransactionType } from "@prisma/generated/urs";
+import prisma, { TransactionType } from "@investment/urs";
 
 export async function GET() {
   try {
@@ -12,10 +11,10 @@ export async function GET() {
     }
 
     // Check if user has sales role or agent access
-    const hasAccess = session.user.roles.includes("sales") || 
-                      session.user.roles.includes("agent") ||
-                      session.user.roles.includes("admin") ||
-                      session.user.permissions.includes("dashboard:sales:view");
+    const hasAccess = session.user.roles.includes("sales") ||
+      session.user.roles.includes("agent") ||
+      session.user.roles.includes("admin") ||
+      session.user.permissions.includes("dashboard:sales:view");
 
     if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -68,7 +67,7 @@ export async function GET() {
 
     const latestAUM = aumData.length > 0 ? aumData[0].aum_value : 0;
     const previousAUM = aumData.length > 1 ? aumData[aumData.length - 1].aum_value : latestAUM;
-    const aumChange = previousAUM > 0 
+    const aumChange = previousAUM > 0
       ? Number(((Number(latestAUM) - Number(previousAUM)) / Number(previousAUM) * 100).toFixed(2))
       : 0;
 
@@ -127,7 +126,7 @@ export async function GET() {
     });
 
     const lastMonthSalesValue = Number(lastMonthSales._sum.amount || 0);
-    const salesGrowth = lastMonthSalesValue > 0 
+    const salesGrowth = lastMonthSalesValue > 0
       ? Number(((actualSales - lastMonthSalesValue) / lastMonthSalesValue * 100).toFixed(2))
       : 0;
 

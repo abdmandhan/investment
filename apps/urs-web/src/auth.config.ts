@@ -16,6 +16,11 @@ export const authConfig = {
       const isOnAuthAPI = nextUrl.pathname.startsWith("/api/auth");
 
       if (isOnAuthAPI) return true;
+
+      // Redirect logged-in users away from the login page
+      if (isOnLoginPage && isLoggedIn) {
+        return Response.redirect(new URL("/", nextUrl.origin));
+      }
       if (isOnLoginPage) return true;
 
       if (isLoggedIn) return true;

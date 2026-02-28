@@ -1,5 +1,5 @@
 'use client';;
-import { HomeLine, Settings01 } from "@untitledui/icons";
+import { HomeLine, Settings01, Users01 } from "@untitledui/icons";
 import { SidebarNavigationSimple } from "@/components/application/app-navigation/sidebar-navigation/sidebar-simple";
 import { useSession } from "next-auth/react";
 
@@ -22,6 +22,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               { label: "Investors", href: "/investors" },
             ],
           },
+          {
+            label: 'Investors',
+            href: 'investors',
+            icon: Users01,
+            items: [
+              { label: 'All Investors', href: '/investors' },
+            ]
+          }
           // {
           //   label: "Dashboard",
           //   href: "/dashboard",

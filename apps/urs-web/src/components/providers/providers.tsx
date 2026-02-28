@@ -1,7 +1,12 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { TRPCProvider } from "@/trpc/trpc-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <TRPCProvider>{children}</TRPCProvider>
+    </SessionProvider>
+  );
 }

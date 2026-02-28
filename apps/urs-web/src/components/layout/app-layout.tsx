@@ -1,9 +1,11 @@
 'use client';;
 import { HomeLine, Settings01 } from "@untitledui/icons";
 import { SidebarNavigationSimple } from "@/components/application/app-navigation/sidebar-navigation/sidebar-simple";
+import { useSession } from "next-auth/react";
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
   return (
     <div className="flex flex-col bg-primary lg:flex-row">
       <SidebarNavigationSimple

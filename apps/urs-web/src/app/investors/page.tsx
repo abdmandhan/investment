@@ -1,30 +1,107 @@
 'use client';
 
 import { useCallback, useMemo, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Edit01, Trash01 } from "@untitledui/icons";
-import type { SortDescriptor } from "react-aria-components";
+import { DataTable } from "@/components/application/table/data-table";
 import { PaginationCardMinimal } from "@/components/application/pagination/pagination";
-import { Table, TableCard, TableRowActionsDropdown } from "@/components/application/table/table";
+import { TableCard, TableRowActionsDropdown } from "@/components/application/table/table";
 import { BadgeWithDot } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { trpc } from "@/trpc/client";
 import { InvestorsFilterRow, type SearchParam } from "./investors-filter-row";
 
-const FILTER_ROW_ID = "__filter" as const;
+type InvestorRow = {
+  id: string;
+  name: string;
+  email?: string;
+  investor_type_id: string;
+  sid: string | null;
+};
+
+const columns: ColumnDef<InvestorRow>[] = [
+  {
+    id: "first_name",
+    accessorKey: "name",
+    header: () => <span className="text-xs font-semibold whitespace-nowrap text-quaternary">Name</span>,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <p className="text-sm font-medium whitespace-nowrap text-primary">{row.original.name}</p>
+      </div>
+    ),
+    enableSorting: true,
+    meta: { headerClassName: "w-full max-w-1/4" },
+  },
+  {
+    id: "investor_type_id",
+    accessorKey: "investor_type_id",
+    header: () => (
+      <span className="text-xs font-semibold whitespace-nowrap text-quaternary">Investor Type</span>
+    ),
+    cell: ({ row }) => (
+      <BadgeWithDot
+        size="sm"
+        color={row.original.investor_type_id === "I" ? "success" : "gray"}
+        type="modern"
+      >
+        {row.original.investor_type_id === "I" ? "Individual" : "Corporate"}
+      </BadgeWithDot>
+    ),
+    enableSorting: true,
+    meta: { headerClassName: "md:hidden xl:table-cell", cellClassName: "md:hidden xl:table-cell" },
+  },
+  {
+    id: "email",
+    accessorKey: "email",
+    header: () => (
+      <span className="text-xs font-semibold whitespace-nowrap text-quaternary">Email address</span>
+    ),
+    cell: ({ row }) => (
+      <span className="whitespace-nowrap md:hidden xl:table-cell">
+        {row.original.email ?? "—"}
+      </span>
+    ),
+    enableSorting: true,
+    meta: { headerClassName: "md:hidden xl:table-cell", cellClassName: "whitespace-nowrap md:hidden xl:table-cell" },
+  },
+  {
+    id: "sid",
+    accessorKey: "sid",
+    header: () => <span className="text-xs font-semibold whitespace-nowrap text-quaternary">SID</span>,
+    cell: ({ row }) => (
+      <span className="whitespace-nowrap md:hidden xl:table-cell">
+        {row.original.sid ?? "—"}
+      </span>
+    ),
+    enableSorting: true,
+    meta: { cellClassName: "whitespace-nowrap md:hidden xl:table-cell" },
+  },
+  {
+    id: "actions",
+    header: () => null,
+    cell: () => (
+      <div className="flex justify-end gap-0.5 px-3">
+        <ButtonUtility size="xs" color="tertiary" tooltip="Delete" icon={Trash01} />
+        <ButtonUtility size="xs" color="tertiary" tooltip="Edit" icon={Edit01} />
+      </div>
+    ),
+    enableSorting: false,
+  },
+];
 
 const InvestorsTable = () => {
   const [page, setPage] = useState(1);
-  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-    column: "created_at",
-    direction: "descending",
+  const [sorting, setSorting] = useState<{ columnId: string; direction: "asc" | "desc" }>({
+    columnId: "created_at",
+    direction: "desc",
   });
   const [searchParams, setSearchParams] = useState<SearchParam[]>([]);
 
   const { data, isLoading, error } = trpc.investors.list.useQuery({
     page,
-    limit: 20,
-    sort: sortDescriptor.column as string,
-    sort_by: sortDescriptor.direction === "ascending" ? "asc" : "desc",
+    limit: 10,
+    sort: sorting.columnId,
+    sort_by: sorting.direction,
     searchs: searchParams,
   });
 
@@ -33,12 +110,26 @@ const InvestorsTable = () => {
     setPage(1);
   }, []);
 
-  const totalPages = data && data.total > 0 ? Math.ceil(data.total / data.limit) : 1;
+  const handleSortChange = useCallback((columnId: string, direction: "asc" | "desc") => {
+    setSorting({ columnId, direction });
+    setPage(1);
+  }, []);
 
-  const tableItems = useMemo(() => {
-    const filterRow = { id: FILTER_ROW_ID, __isFilterRow: true as const };
-    return [filterRow, ...(data?.items ?? [])];
-  }, [data?.items]);
+  const totalPages =
+    data && data.total > 0 ? Math.ceil(data.total / data.limit) : 1;
+  const items: InvestorRow[] = data?.items ?? [];
+
+  const filterRow = useMemo(
+    () => (
+      <InvestorsFilterRow
+        native
+        filterRowId="__filter"
+        initialSearchParams={searchParams}
+        onSearchChange={handleSearchChange}
+      />
+    ),
+    [searchParams, handleSearchChange]
+  );
 
   if (error) {
     return (
@@ -51,8 +142,6 @@ const InvestorsTable = () => {
     );
   }
 
-  console.log('render table')
-
   return (
     <TableCard.Root size="sm">
       <TableCard.Header
@@ -63,57 +152,16 @@ const InvestorsTable = () => {
           </div>
         }
       />
-      <Table
-        aria-label="Investors"
-        selectionMode="multiple"
-        sortDescriptor={sortDescriptor}
-        onSortChange={setSortDescriptor}
-      >
-        <Table.Header>
-          <Table.Head id="first_name" label="Name" isRowHeader allowsSorting className="w-full max-w-1/4" />
-          <Table.Head id="investor_type_id" label="Investor Type" allowsSorting className="md:hidden xl:table-cell" />
-          <Table.Head id="email" label="Email address" allowsSorting className="md:hidden xl:table-cell" />
-          <Table.Head id="sid" label="SID" allowsSorting />
-          <Table.Head id="actions" />
-        </Table.Header>
-
-        <Table.Body items={tableItems}>
-          {(item) => {
-            if ("__isFilterRow" in item && item.__isFilterRow) {
-              return (
-                <InvestorsFilterRow
-                  filterRowId={FILTER_ROW_ID}
-                  initialSearchParams={searchParams}
-                  onSearchChange={handleSearchChange}
-                />
-              );
-            }
-            const row = item as { id: string; name: string; email?: string; investor_type_id: string; sid: string | null };
-            return (
-              <Table.Row id={row.id}>
-                <Table.Cell>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium whitespace-nowrap text-primary">{row.name}</p>
-                  </div>
-                </Table.Cell>
-                <Table.Cell>
-                  <BadgeWithDot size="sm" color={row.investor_type_id === "individual" ? "success" : "gray"} type="modern">
-                    {row.investor_type_id === "I" ? "Individual" : "Corporate"}
-                  </BadgeWithDot>
-                </Table.Cell>
-                <Table.Cell className="whitespace-nowrap md:hidden xl:table-cell">{row.email ?? "—"}</Table.Cell>
-                <Table.Cell className="whitespace-nowrap md:hidden xl:table-cell">{row.sid ?? "—"}</Table.Cell>
-                <Table.Cell className="px-3">
-                  <div className="flex justify-end gap-0.5">
-                    <ButtonUtility size="xs" color="tertiary" tooltip="Delete" icon={Trash01} />
-                    <ButtonUtility size="xs" color="tertiary" tooltip="Edit" icon={Edit01} />
-                  </div>
-                </Table.Cell>
-              </Table.Row>
-            );
-          }}
-        </Table.Body>
-      </Table>
+      <DataTable<InvestorRow>
+        columns={columns}
+        data={items}
+        filterRow={filterRow}
+        sorting={sorting}
+        onSortChange={handleSortChange}
+        getRowId={(row) => row.id}
+        emptyState="No investors found."
+        size="sm"
+      />
 
       {isLoading && (
         <div className="px-4 py-6 text-center text-sm text-muted">Loading investors…</div>

@@ -1,4 +1,4 @@
-import { PrismaClient, TransactionType } from './../generated/prisma/index.js';
+import { PrismaClient, TransactionType, Prisma } from './../generated/prisma/index.js';
 
 import { PrismaPg } from "@prisma/adapter-pg"
 
@@ -10,6 +10,6 @@ const prisma = new PrismaClient({
   adapter
 });
 
-export { TransactionType, prisma };
+export { TransactionType, prisma, Prisma };
 
 export default prisma;

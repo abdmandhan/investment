@@ -14,13 +14,13 @@ import { cx } from "@/utils/cx";
 /** Extended column meta for header/cell class names. */
 type DataTableColumnMeta = { headerClassName?: string; cellClassName?: string };
 
-const cellBase =
+export const cellBase =
   "relative text-sm text-tertiary outline-focus-ring focus-visible:z-1 focus-visible:outline-2 focus-visible:-outline-offset-2 max-w-sm overflow-auto";
-const cellSizeSm = "px-5 py-0";
-const cellSizeMd = "px-6 py-4";
-const rowBorder =
+export const cellSizeSm = "px-5 py-0";
+export const cellSizeMd = "px-6 py-4";
+export const rowBorder =
   "[&>td]:after:absolute [&>td]:after:inset-x-0 [&>td]:after:bottom-0 [&>td]:after:h-px [&>td]:after:w-full [&>td]:after:bg-border-secondary last:[&>td]:after:hidden [&>td]:focus-visible:after:opacity-0 focus-visible:[&>td]:after:opacity-0";
-const thBase =
+export const thBase =
   "relative p-0 px-6 py-2 outline-hidden focus-visible:z-1 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-bg-primary focus-visible:ring-inset";
 
 export interface DataTableProps<T> {
@@ -40,6 +40,8 @@ export interface DataTableProps<T> {
   emptyState?: ReactNode;
   /** Table density. */
   size?: "sm" | "md";
+  /** Called when a row is clicked. */
+  onRowClick?: (row: T) => void;
 }
 
 export function DataTable<T>({
@@ -51,6 +53,7 @@ export function DataTable<T>({
   getRowId,
   emptyState = "No results.",
   size = "sm",
+  onRowClick,
 }: DataTableProps<T>) {
   const sortingState: SortingState =
     sorting != null ? [{ id: sorting.columnId, desc: sorting.direction === "desc" }] : [];
@@ -154,6 +157,7 @@ export function DataTable<T>({
                   rowHeight,
                   rowBorder
                 )}
+                onClick={() => onRowClick?.(row.original)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td

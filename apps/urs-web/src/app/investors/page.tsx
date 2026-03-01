@@ -3,13 +3,23 @@
 import { useCallback, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit01, Trash01 } from "@untitledui/icons";
-import { DataTable } from "@/components/application/table/data-table";
+import { cellBase, DataTable, rowBorder, thBase } from "@/components/application/table/data-table";
 import { PaginationCardMinimal } from "@/components/application/pagination/pagination";
 import { TableCard, TableRowActionsDropdown } from "@/components/application/table/table";
 import { BadgeWithDot } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { trpc } from "@/trpc/client";
 import { InvestorsFilterRow, type SearchParam } from "./investors-filter-row";
+import { cx } from "@/utils/cx";
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    currency: "IDR",
+    style: "currency",
+  }).format(value);
+};
 
 type InvestorRow = {
   id: string;
@@ -17,6 +27,8 @@ type InvestorRow = {
   email?: string;
   investor_type_id: string;
   sid: string | null;
+  /** Formatted AUM string from API (e.g. "IDR 1.2M"). */
+  aum: string;
 };
 
 const columns: ColumnDef<InvestorRow>[] = [
@@ -77,6 +89,15 @@ const columns: ColumnDef<InvestorRow>[] = [
     meta: { cellClassName: "whitespace-nowrap md:hidden xl:table-cell" },
   },
   {
+    id: "aum",
+    accessorKey: "aum",
+    header: () => <span className="text-xs font-semibold whitespace-nowrap text-quaternary">AUM</span>,
+    cell: ({ row }) => (
+      <span className="whitespace-nowrap md:hidden xl:table-cell">{row.original.aum || "—"}</span>
+    ),
+    enableSorting: true,
+  },
+  {
     id: "actions",
     header: () => null,
     cell: () => (
@@ -96,6 +117,7 @@ const InvestorsTable = () => {
     direction: "desc",
   });
   const [searchParams, setSearchParams] = useState<SearchParam[]>([]);
+  const [selectedInvestor, setSelectedInvestor] = useState<string | null>(null);
 
   const { data, isLoading, error } = trpc.investors.list.useQuery({
     page,
@@ -104,6 +126,14 @@ const InvestorsTable = () => {
     sort_by: sorting.direction,
     searchs: searchParams,
   });
+
+  const { data: investorData } = trpc.investors.get.useQuery({
+    id: selectedInvestor ?? ""
+  }, { enabled: !!selectedInvestor });
+
+  const { data: portfolioData } = trpc.investors.portfolio.useQuery({
+    id: selectedInvestor ?? ""
+  }, { enabled: !!selectedInvestor });
 
   const handleSearchChange = useCallback((params: SearchParam[]) => {
     setSearchParams(params);
@@ -143,38 +173,73 @@ const InvestorsTable = () => {
   }
 
   return (
-    <TableCard.Root size="sm">
-      <TableCard.Header
-        title="Investors"
-        contentTrailing={
-          <div className="absolute top-5 right-4 md:right-6">
-            <TableRowActionsDropdown />
-          </div>
-        }
-      />
-      <DataTable<InvestorRow>
-        columns={columns}
-        data={items}
-        filterRow={filterRow}
-        sorting={sorting}
-        onSortChange={handleSortChange}
-        getRowId={(row) => row.id}
-        emptyState="No investors found."
-        size="sm"
-      />
+    <div>
+      <TableCard.Root size="sm">
+        <TableCard.Header
+          title="Investors"
+          contentTrailing={
+            <div className="absolute top-5 right-4 md:right-6">
+              <TableRowActionsDropdown />
+            </div>
+          }
+        />
+        <DataTable<InvestorRow>
+          columns={columns}
+          data={items}
+          filterRow={filterRow}
+          sorting={sorting}
+          onSortChange={handleSortChange}
+          getRowId={(row) => row.id}
+          emptyState="No investors found."
+          size="sm"
+          onRowClick={(row) => setSelectedInvestor(row.id)}
+        />
 
-      {isLoading && (
-        <div className="px-4 py-6 text-center text-sm text-muted">Loading investors…</div>
+        {isLoading && (
+          <div className="px-4 py-6 text-center text-sm text-muted">Loading investors…</div>
+        )}
+
+        <PaginationCardMinimal
+          align="right"
+          page={page}
+          total={totalPages}
+          onPageChange={setPage}
+          className="px-4 py-3 md:px-5 md:pt-3 md:pb-4"
+        />
+      </TableCard.Root>
+
+      {investorData && (
+        <div className="px-4 py-6 text-sm text-muted dark:text-white bg-primary rounded-lg mt-10">
+          {investorData.first_name} {investorData.middle_name} {investorData.last_name}
+
+          <br />
+          <br />
+          {portfolioData && (<div>
+            <table className="w-full overflow-x-hidden">
+              <thead className={cx("relative bg-secondary", "h-9")}>
+                <tr>
+                  <th className={thBase}>Fund</th>
+                  <th className={thBase} align="left">Units</th>
+                  <th className={thBase}>NAV/Unit</th>
+                  <th className={thBase}>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolioData.map((p) => (
+                  <tr key={p.fund_id}>
+                    <td className={cellBase}>{p.fund?.name.toUpperCase()}</td>
+                    <td className={cellBase}>{p.units_after}</td>
+                    <td className={cellBase}>{p.fund?.fund_navs[0]?.nav_per_unit}</td>
+                    <td className={cellBase}>{formatCurrency(Number(p.fund?.fund_navs[0]?.nav_per_unit) * Number(p.units_after))}</td>
+                  </tr>
+                ))}
+              </tbody>
+
+            </table>
+          </div>)}
+        </div>
       )}
-
-      <PaginationCardMinimal
-        align="right"
-        page={page}
-        total={totalPages}
-        onPageChange={setPage}
-        className="px-4 py-3 md:px-5 md:pt-3 md:pb-4"
-      />
-    </TableCard.Root>
+    </div>
   );
 };
 

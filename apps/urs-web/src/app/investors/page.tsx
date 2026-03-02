@@ -11,6 +11,11 @@ import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { trpc } from "@/trpc/client";
 import { InvestorsFilterRow, type SearchParam } from "./investors-filter-row";
 import { cx } from "@/utils/cx";
+import { NativeSelect } from "@/components/base/select/select-native";
+import { Tabs } from "@/components/application/tabs/tabs";
+import { Key } from "react-aria";
+import { ProfileTab } from "./profile-tab";
+import { PortfolioTab } from "./portfolio-tab";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("en-US", {
@@ -30,6 +35,13 @@ type InvestorRow = {
   /** Formatted AUM string from API (e.g. "IDR 1.2M"). */
   aum: string;
 };
+
+const tabs = [
+  { id: "profile", label: "Profile" },
+  { id: "portfolio", label: "Portfolio" },
+  { id: "transactions", label: "Transactions" },
+  { id: "journals", label: "Journals" },
+];
 
 const columns: ColumnDef<InvestorRow>[] = [
   {
@@ -113,11 +125,12 @@ const columns: ColumnDef<InvestorRow>[] = [
 const InvestorsTable = () => {
   const [page, setPage] = useState(1);
   const [sorting, setSorting] = useState<{ columnId: string; direction: "asc" | "desc" }>({
-    columnId: "created_at",
+    columnId: "aum",
     direction: "desc",
   });
   const [searchParams, setSearchParams] = useState<SearchParam[]>([]);
   const [selectedInvestor, setSelectedInvestor] = useState<string | null>(null);
+  const [selectedTabIndex, setSelectedTabIndex] = useState<Key>("profile");
 
   const { data, isLoading, error } = trpc.investors.list.useQuery({
     page,
@@ -131,9 +144,6 @@ const InvestorsTable = () => {
     id: selectedInvestor ?? ""
   }, { enabled: !!selectedInvestor });
 
-  const { data: portfolioData } = trpc.investors.portfolio.useQuery({
-    id: selectedInvestor ?? ""
-  }, { enabled: !!selectedInvestor });
 
   const handleSearchChange = useCallback((params: SearchParam[]) => {
     setSearchParams(params);
@@ -213,39 +223,27 @@ const InvestorsTable = () => {
           {investorData.first_name} {investorData.middle_name} {investorData.last_name}
 
           <br />
-          <br />
-          {portfolioData && (<div>
-            <table className="w-full overflow-x-hidden">
-              <thead className={cx("relative bg-secondary", "h-9")}>
-                <tr>
-                  <th className={thBase}>Fund</th>
-                  <th className={thBase}>Code</th>
-                  <th className={thBase}>Units</th>
-                  <th className={thBase}>NAV/Unit</th>
-                  <th className={thBase}>Modal</th>
-                  <th className={thBase}>Avg Price</th>
-                  <th className={thBase}>Value</th>
-                  <th className={thBase}>P&amp;L</th>
-                  <th className={thBase}>Return</th>
-                </tr>
-              </thead>
-              <tbody>
-                {portfolioData.map((p) => (
-                  <tr key={p.fund_id}>
-                    <td className={cellBase}>{p.fund?.name?.toUpperCase() ?? "—"}</td>
-                    <td className={cellBase}>{p.fund?.code?.toUpperCase() ?? "—"}</td>
-                    <td className={cellBase}>{p.units_after}</td>
-                    <td className={cellBase}>{p.fund?.latest_nav?.nav_per_unit != null ? (Number(p.fund.latest_nav.nav_per_unit)) : "—"}</td>
-                    <td className={cellBase}>{formatCurrency(p.modal)}</td>
-                    <td className={cellBase}>{formatCurrency(p.avg_price)}</td>
-                    <td className={cellBase}>{formatCurrency(p.value)}</td>
-                    <td className={cellBase}>{formatCurrency(p.profit_and_loss)}</td>
-                    <td className={cellBase}>{p.return_pct.toFixed(2)}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>)}
+
+          <NativeSelect
+            aria-label="Tabs"
+            value={selectedTabIndex as string}
+            onChange={(event) => setSelectedTabIndex(event.target.value)}
+            options={tabs.map((tab) => ({ label: tab.label, value: tab.id }))}
+            className="w-80 md:hidden"
+          />
+          <Tabs selectedKey={selectedTabIndex} onSelectionChange={setSelectedTabIndex} className="w-max max-md:hidden">
+            <Tabs.List type="underline" items={tabs}>
+              {(tab) => <Tabs.Item {...tab} />}
+            </Tabs.List>
+            <Tabs.Panel id="profile">
+              <ProfileTab />
+            </Tabs.Panel>
+
+            <Tabs.Panel id="portfolio">
+              {selectedInvestor && <PortfolioTab selectedInvestor={selectedInvestor} />}
+            </Tabs.Panel>
+          </Tabs>
+
         </div>
       )}
     </div>

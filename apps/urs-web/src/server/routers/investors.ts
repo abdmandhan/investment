@@ -4,8 +4,7 @@ import { router, publicProcedure } from "../trpc";
 import type { Context } from "../trpc";
 import type { Prisma as PrismaTypes } from "@investment/urs";
 
-type LatestHolding = { investor_id: string; fund_id: number; units_after: unknown };
-type LatestNav = { fund_id: number; nav_per_unit: unknown };
+type LatestAumRow = { investor_id: string; aum_value: unknown };
 
 function toNum(v: unknown): number {
   if (v == null) return 0;
@@ -34,31 +33,20 @@ async function computeAumByInvestor(
   const aumByInvestor: Record<string, number> = {};
   if (investorIds.length === 0) return aumByInvestor;
 
-  const latestHoldings = await prisma.$queryRaw<LatestHolding[]>`
-    SELECT DISTINCT ON (investor_id, fund_id) investor_id, fund_id, units_after
-    FROM investor_holdings
+  // Use precomputed daily AUM snapshot instead of recomputing
+  // from holdings + NAV on every request.
+  const rows = await prisma.$queryRaw<LatestAumRow[]>`
+    SELECT investor_id, SUM(aum_value) AS aum_value
+    FROM aum_investor_daily
     WHERE investor_id IN (${Prisma.join(investorIds)})
-    ORDER BY investor_id, fund_id, created_at DESC
+      AND date = (SELECT MAX(date) FROM aum_investor_daily)
+    GROUP BY investor_id
   `;
 
-  const fundIds = [...new Set(latestHoldings.map((h) => h.fund_id))];
-  const latestNavs =
-    fundIds.length > 0
-      ? await prisma.$queryRaw<LatestNav[]>`
-          SELECT DISTINCT ON (fund_id) fund_id, nav_per_unit
-          FROM fund_navs
-          WHERE fund_id IN (${Prisma.join(fundIds)})
-          ORDER BY fund_id, date DESC
-        `
-      : [];
-
-  const navByFund = new Map(latestNavs.map((n) => [n.fund_id, n.nav_per_unit]));
-  for (const h of latestHoldings) {
-    const navPerUnit = toNum(navByFund.get(h.fund_id));
-    const units = toNum(h.units_after);
-    const aum = units * navPerUnit;
-    aumByInvestor[h.investor_id] = (aumByInvestor[h.investor_id] ?? 0) + aum;
+  for (const row of rows) {
+    aumByInvestor[row.investor_id] = toNum(row.aum_value);
   }
+
   return aumByInvestor;
 }
 
@@ -213,6 +201,7 @@ export const investorsRouter = router({
           requested_by: input.requestedBy,
           requested_at: new Date(),
           reason: input.reason ?? null,
+          entity_version: current.version,
         },
       });
 
@@ -315,5 +304,178 @@ export const investorsRouter = router({
           return_pct: returnPct,
         };
       });
+    }),
+  journals: publicProcedure
+    .input(
+      z.object({
+        investorId: z.string(),
+        status: z.enum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"]).optional(),
+        page: z.number().min(1).optional().default(1),
+        limit: z.number().min(1).max(50).optional().default(10),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const page = input.page ?? 1;
+      const limit = input.limit ?? 10;
+      const skip = (page - 1) * limit;
+
+      const baseWhere: PrismaTypes.journalsWhereInput = {
+        entity: "investors",
+        entity_id: input.investorId,
+      };
+      const where: PrismaTypes.journalsWhereInput = input.status
+        ? { ...baseWhere, status: input.status }
+        : baseWhere;
+
+      const [items, total, grouped] = await Promise.all([
+        ctx.prisma.journals.findMany({
+          where,
+          orderBy: { requested_at: "desc" },
+          skip,
+          take: limit,
+          include: {
+            requested_user: { select: { id: true, name: true } },
+            approved_user: { select: { id: true, name: true } },
+            journal_detail: true,
+          },
+        }),
+        ctx.prisma.journals.count({ where }),
+        ctx.prisma.journals.groupBy({
+          by: ["status"],
+          where: baseWhere,
+          _count: { _all: true },
+        }),
+      ]);
+
+      const statusCounts: Record<string, number> = {};
+      for (const row of grouped) {
+        statusCounts[row.status] = row._count._all;
+      }
+
+      return {
+        items,
+        total,
+        page,
+        limit,
+        statusCounts,
+      };
+    }),
+  approveJournal: publicProcedure
+    .input(
+      z.object({
+        journalId: z.number(),
+        approvedBy: z.number().int(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const journal = await ctx.prisma.journals.findUnique({
+        where: { id: input.journalId },
+        include: { journal_detail: true },
+      });
+
+      if (!journal) {
+        throw new Error("Journal not found");
+      }
+      if (journal.entity !== "investors") {
+        throw new Error("Unsupported entity for this endpoint");
+      }
+      if (journal.status !== "PENDING") {
+        throw new Error("Only pending journals can be approved");
+      }
+
+      const investor = await ctx.prisma.investors.findUnique({
+        where: { id: journal.entity_id! },
+      });
+      if (!investor) {
+        throw new Error("Investor not found");
+      }
+
+      if (journal.entity_version != null && journal.entity_version !== investor.version) {
+        await ctx.prisma.journals.update({
+          where: { id: journal.id },
+          data: {
+            status: "REJECTED",
+            rejection_reason:
+              "Stale version: investor profile has changed since this request was created.",
+            approved_by: input.approvedBy,
+            approved_at: new Date(),
+          },
+        });
+        throw new Error("Journal is stale and has been rejected. Please resubmit from latest data.");
+      }
+
+      const detail = journal.journal_detail;
+      const newValue = (detail?.new_value ?? {}) as Prisma.JsonObject;
+      const updateData: PrismaTypes.investorsUpdateInput = {};
+
+      const copyIfPresent = (field: string) => {
+        if (field in newValue) {
+          (updateData as any)[field] = (newValue as any)[field];
+        }
+      };
+
+      copyIfPresent("external_code");
+      copyIfPresent("first_name");
+      copyIfPresent("middle_name");
+      copyIfPresent("last_name");
+      copyIfPresent("email");
+      copyIfPresent("phone_number");
+      copyIfPresent("risk_level_id");
+      copyIfPresent("risk_point");
+      copyIfPresent("sid");
+      copyIfPresent("investor_type_id");
+
+      const updated = await ctx.prisma.investors.update({
+        where: { id: journal.entity_id! },
+        data: {
+          ...updateData,
+          version: { increment: 1 },
+        },
+      });
+
+      await ctx.prisma.journals.update({
+        where: { id: journal.id },
+        data: {
+          status: "APPROVED",
+          approved_by: input.approvedBy,
+          approved_at: new Date(),
+          applied_at: new Date(),
+          entity_version: updated.version,
+        },
+      });
+
+      return { success: true, newVersion: updated.version };
+    }),
+  rejectJournal: publicProcedure
+    .input(
+      z.object({
+        journalId: z.number(),
+        rejectedBy: z.number().int(),
+        reason: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const journal = await ctx.prisma.journals.findUnique({
+        where: { id: input.journalId },
+      });
+
+      if (!journal) {
+        throw new Error("Journal not found");
+      }
+      if (journal.status !== "PENDING") {
+        throw new Error("Only pending journals can be rejected");
+      }
+
+      await ctx.prisma.journals.update({
+        where: { id: input.journalId },
+        data: {
+          status: "REJECTED",
+          rejection_reason: input.reason ?? null,
+          approved_by: input.rejectedBy,
+          approved_at: new Date(),
+        },
+      });
+
+      return { success: true };
     }),
 });

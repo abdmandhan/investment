@@ -15,6 +15,7 @@ import { Tabs } from "@/components/application/tabs/tabs";
 import { Key } from "react-aria";
 import { ProfileTab } from "./profile-tab";
 import { PortfolioTab } from "./portfolio-tab";
+import { JournalTab } from "./journal-tab";
 
 type InvestorRow = {
   id: string;
@@ -232,6 +233,10 @@ const InvestorsTable = () => {
 
             <Tabs.Panel id="portfolio">
               {selectedInvestor && <PortfolioTab selectedInvestor={selectedInvestor} />}
+            </Tabs.Panel>
+
+            <Tabs.Panel id="journals">
+              {selectedInvestor && <JournalTab selectedInvestor={selectedInvestor} />}
             </Tabs.Panel>
           </Tabs>
 

@@ -131,6 +131,9 @@ export function ProfileTab({ investor }: ProfileTabProps) {
         },
       });
 
+      // clear journal query
+      utils.investors.journals.invalidate({ investorId: investor.id });
+
       toast.custom((t) => (
         <IconNotification
           title="Successfully updated profile"

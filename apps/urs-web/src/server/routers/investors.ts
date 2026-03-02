@@ -229,7 +229,16 @@ export const investorsRouter = router({
   get: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const investor = await ctx.prisma.investors.findUnique({ where: { id: input.id } });
+      const investor = await ctx.prisma.investors.findUnique({
+        where: { id: input.id },
+        include: {
+          investor_addresses: true,
+          investor_heirs: true,
+          investor_individuals: true,
+          investor_corporates: true,
+          investor_banks: true,
+        },
+      });
       return investor;
     }),
   portfolio: publicProcedure

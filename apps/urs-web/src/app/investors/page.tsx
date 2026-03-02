@@ -3,28 +3,18 @@
 import { useCallback, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit01, Trash01 } from "@untitledui/icons";
-import { cellBase, DataTable, thBase } from "@/components/application/table/data-table";
+import { DataTable } from "@/components/application/table/data-table";
 import { PaginationCardMinimal } from "@/components/application/pagination/pagination";
 import { TableCard, TableRowActionsDropdown } from "@/components/application/table/table";
 import { BadgeWithDot } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { trpc } from "@/trpc/client";
 import { InvestorsFilterRow, type SearchParam } from "./investors-filter-row";
-import { cx } from "@/utils/cx";
 import { NativeSelect } from "@/components/base/select/select-native";
 import { Tabs } from "@/components/application/tabs/tabs";
 import { Key } from "react-aria";
 import { ProfileTab } from "./profile-tab";
 import { PortfolioTab } from "./portfolio-tab";
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-    currency: "IDR",
-    style: "currency",
-  }).format(value);
-};
 
 type InvestorRow = {
   id: string;
@@ -223,6 +213,7 @@ const InvestorsTable = () => {
           {investorData.first_name} {investorData.middle_name} {investorData.last_name}
 
           <br />
+          <br />
 
           <NativeSelect
             aria-label="Tabs"
@@ -231,12 +222,12 @@ const InvestorsTable = () => {
             options={tabs.map((tab) => ({ label: tab.label, value: tab.id }))}
             className="w-80 md:hidden"
           />
-          <Tabs selectedKey={selectedTabIndex} onSelectionChange={setSelectedTabIndex} className="w-max max-md:hidden">
-            <Tabs.List type="underline" items={tabs}>
+          <Tabs selectedKey={selectedTabIndex} onSelectionChange={setSelectedTabIndex} className="w-max max-md:hidden w-full">
+            <Tabs.List type="underline" items={tabs} className="mb-4">
               {(tab) => <Tabs.Item {...tab} />}
             </Tabs.List>
             <Tabs.Panel id="profile">
-              <ProfileTab />
+              {investorData && <ProfileTab investor={investorData} />}
             </Tabs.Panel>
 
             <Tabs.Panel id="portfolio">

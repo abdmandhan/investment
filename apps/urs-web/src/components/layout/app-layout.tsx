@@ -1,6 +1,7 @@
 'use client';;
 import { HomeLine, Settings01, Users01 } from "@untitledui/icons";
 import { SidebarNavigationSimple } from "@/components/application/app-navigation/sidebar-navigation/sidebar-simple";
+import { Toaster } from "sonner";
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -112,6 +113,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       />
       <main className="min-w-0 flex-1 lg:pt-2 h-screen overflow-y-auto">
         <div className="flex h-full flex-col gap-8 border-secondary bg-secondary_subtle pt-8 pb-12 shadow-xs lg:rounded-tl-[32px] lg:border-t lg:border-l">
+          <Toaster />
           {children}
         </div>
       </main>

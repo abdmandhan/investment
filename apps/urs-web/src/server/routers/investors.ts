@@ -142,6 +142,90 @@ export const investorsRouter = router({
         limit,
       };
     }),
+  updateProfile: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        requestedBy: z.number().int(),
+        reason: z.string().optional(),
+        data: z
+          .object({
+            external_code: z.string().nullable().optional(),
+            first_name: z.string().optional(),
+            middle_name: z.string().nullable().optional(),
+            last_name: z.string().nullable().optional(),
+            email: z.string().email().nullable().optional(),
+            phone_number: z.string().nullable().optional(),
+            risk_level_id: z.number().int().nullable().optional(),
+            risk_point: z.number().int().nullable().optional(),
+            sid: z.string().nullable().optional(),
+            investor_type_id: z.string().optional(),
+          })
+          .partial(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const current = await ctx.prisma.investors.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!current) {
+        throw new Error("Investor not found");
+      }
+
+      const fields: (keyof typeof input.data)[] = [
+        "external_code",
+        "first_name",
+        "middle_name",
+        "last_name",
+        "email",
+        "phone_number",
+        "risk_level_id",
+        "risk_point",
+        "sid",
+        "investor_type_id",
+      ];
+
+      const old_value: Record<string, unknown> = {};
+      const new_value: Record<string, unknown> = {};
+
+      for (const field of fields) {
+        if (field in input.data) {
+          const next = (input.data as any)[field];
+          const prev = (current as any)[field];
+          if (next !== undefined && next !== prev) {
+            old_value[field] = prev;
+            new_value[field] = next;
+          }
+        }
+      }
+
+      if (Object.keys(new_value).length === 0) {
+        return { changed: false, journalId: null };
+      }
+
+      const journal = await ctx.prisma.journals.create({
+        data: {
+          entity: "investors",
+          entity_id: input.id,
+          action: "UPDATE",
+          status: "PENDING",
+          requested_by: input.requestedBy,
+          requested_at: new Date(),
+          reason: input.reason ?? null,
+        },
+      });
+
+      await ctx.prisma.journal_details.create({
+        data: {
+          journal_id: journal.id,
+          old_value: old_value as unknown as Prisma.JsonObject,
+          new_value: new_value as unknown as Prisma.JsonObject,
+        },
+      });
+
+      return { changed: true, journalId: journal.id };
+    }),
   get: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {

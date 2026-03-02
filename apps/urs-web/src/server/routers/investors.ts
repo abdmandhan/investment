@@ -151,35 +151,76 @@ export const investorsRouter = router({
   portfolio: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      // get last holdings for an investor
       const portfolio = await ctx.prisma.investor_holdings.findMany({
         where: { investor_id: input.id },
         orderBy: { created_at: "desc" },
         distinct: ["fund_id"],
-        select: {
-          fund_id: true,
-          units_after: true,
-        }
+        select: { fund_id: true, units_after: true },
       });
 
       const fundIds = portfolio.map((p) => p.fund_id);
-      const funds = await ctx.prisma.funds.findMany({
-        where: { id: { in: fundIds } }, select: {
-          id: true,
-          name: true,
-          code: true,
-          fund_navs: {
-            orderBy: { date: "desc" },
-            take: 1,
-            select: { nav_per_unit: true, date: true }
-          }
-        },
-      });
+      if (fundIds.length === 0) return [];
+
+      const [funds, modalByFundRows] = await Promise.all([
+        ctx.prisma.funds.findMany({
+          where: { id: { in: fundIds } },
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            fund_navs: {
+              orderBy: { date: "desc" },
+              take: 1,
+              select: { nav_per_unit: true, date: true },
+            },
+          },
+        }),
+        ctx.prisma.transactions.groupBy({
+          by: ["fund_id"],
+          where: {
+            investor_id: input.id,
+            fund_id: { in: fundIds },
+            transaction_type: { in: ["SUBSCRIPTION", "SWITCHING_IN"] },
+          },
+          _sum: { net_amount: true },
+        }),
+      ]);
+
       const fundMap = new Map(funds.map((f) => [f.id, f]));
-      return portfolio.map((p) => ({
-        fund_id: p.fund_id,
-        units_after: p.units_after,
-        fund: fundMap.get(p.fund_id),
-      }));
+      const modalByFund = new Map(
+        modalByFundRows.map((r) => [r.fund_id, toNum(r._sum.net_amount)])
+      );
+
+      return portfolio.map((p) => {
+        const fund = fundMap.get(p.fund_id);
+        const latestNav = fund?.fund_navs?.[0];
+        const navPerUnit = latestNav ? toNum(latestNav.nav_per_unit) : 0;
+        const units = toNum(p.units_after);
+        const modal = modalByFund.get(p.fund_id) ?? 0;
+        const value = units * navPerUnit;
+        const avgPrice = units > 0 ? modal / units : 0;
+        const profitAndLoss = value - modal;
+        const returnPct = modal > 0 ? (profitAndLoss / modal) * 100 : 0;
+
+        return {
+          fund_id: p.fund_id,
+          units_after: p.units_after,
+          fund: fund
+            ? {
+                id: fund.id,
+                name: fund.name,
+                code: fund.code,
+                latest_nav: latestNav
+                  ? { nav_per_unit: latestNav.nav_per_unit, date: latestNav.date }
+                  : null,
+              }
+            : null,
+          modal,
+          avg_price: avgPrice,
+          value,
+          profit_and_loss: profitAndLoss,
+          return_pct: returnPct,
+        };
+      });
     }),
 });

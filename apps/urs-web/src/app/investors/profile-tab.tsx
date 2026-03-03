@@ -84,8 +84,6 @@ interface ProfileTabProps {
 
 export function ProfileTab({ investor }: ProfileTabProps) {
   const utils = trpc.useUtils();
-  const { data: session } = useSession();
-  const userId = session?.user?.id ? Number(session.user.id) : null;
 
   const updateMutation = trpc.investors.updateProfile.useMutation({
     onSuccess: () => {
@@ -111,11 +109,8 @@ export function ProfileTab({ investor }: ProfileTabProps) {
       reason: "",
     },
     onSubmit: async ({ value }) => {
-      if (!userId) return;
-
       await updateMutation.mutateAsync({
         id: investor.id,
-        requestedBy: userId,
         reason: value.reason || undefined,
         data: {
           external_code: value.external_code || null,
@@ -277,7 +272,7 @@ export function ProfileTab({ investor }: ProfileTabProps) {
       <button
         type="submit"
         className="rounded-lg bg-brand-primary_alt px-4 py-2 text-sm font-medium text-brand-secondary disabled:opacity-60"
-        disabled={!form.state.canSubmit || form.state.isSubmitting || !userId}
+        disabled={!form.state.canSubmit || form.state.isSubmitting}
       >
         {form.state.isSubmitting ? "Submitting..." : "Submit for approval"}
       </button>

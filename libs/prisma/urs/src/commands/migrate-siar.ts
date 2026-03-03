@@ -33,31 +33,31 @@ const ALL_STEPS: MigrationStep[] = [
     description: 'Import investors and related data from SIAR',
     run: importInvestorsFromSiar,
   },
-  // {
-  //   name: 'transactions',
-  //   description: 'Import approved transactions from SIAR',
-  //   run: importTransaction,
-  // },
-  // {
-  //   name: 'missing-transactions',
-  //   description: 'Reconcile and import missing SIAR transactions',
-  //   run: migrateMissingTransactions,
-  // },
-  // {
-  //   name: 'nav',
-  //   description: 'Import missing NAV records',
-  //   run: migrateNav,
-  // },
-  // {
-  //   name: 'management-fee',
-  //   description: 'Sync management fee and valuation basis',
-  //   run: importManagementFee,
-  // },
-  // {
-  //   name: 'holdings',
-  //   description: 'Generate investor holdings snapshots',
-  //   run: generateHoldings,
-  // },
+  {
+    name: 'transactions',
+    description: 'Import approved transactions from SIAR',
+    run: importTransaction,
+  },
+  {
+    name: 'missing-transactions',
+    description: 'Reconcile and import missing SIAR transactions',
+    run: migrateMissingTransactions,
+  },
+  {
+    name: 'nav',
+    description: 'Import missing NAV records',
+    run: migrateNav,
+  },
+  {
+    name: 'management-fee',
+    description: 'Sync management fee and valuation basis',
+    run: importManagementFee,
+  },
+  {
+    name: 'holdings',
+    description: 'Generate investor holdings snapshots',
+    run: generateHoldings,
+  },
 ];
 
 function parseOption(name: string): string | undefined {

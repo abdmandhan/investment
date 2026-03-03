@@ -288,13 +288,13 @@ export const investorsRouter = router({
           units_after: p.units_after,
           fund: fund
             ? {
-                id: fund.id,
-                name: fund.name,
-                code: fund.code,
-                latest_nav: latestNav
-                  ? { nav_per_unit: latestNav.nav_per_unit, date: latestNav.date }
-                  : null,
-              }
+              id: fund.id,
+              name: fund.name,
+              code: fund.code,
+              latest_nav: latestNav
+                ? { nav_per_unit: latestNav.nav_per_unit, date: latestNav.date }
+                : null,
+            }
             : null,
           modal,
           avg_price: avgPrice,
@@ -359,11 +359,10 @@ export const investorsRouter = router({
         statusCounts,
       };
     }),
-  approveJournal: publicProcedure
+  approveJournal: protectedProcedure
     .input(
       z.object({
         journalId: z.number(),
-        approvedBy: z.number().int(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -396,7 +395,7 @@ export const investorsRouter = router({
             status: "REJECTED",
             rejection_reason:
               "Stale version: investor profile has changed since this request was created.",
-            approved_by: input.approvedBy,
+            approved_by: ctx.session.user.id,
             approved_at: new Date(),
           },
         });
@@ -436,7 +435,7 @@ export const investorsRouter = router({
         where: { id: journal.id },
         data: {
           status: "APPROVED",
-          approved_by: input.approvedBy,
+          approved_by: ctx.session.user.id,
           approved_at: new Date(),
           applied_at: new Date(),
           entity_version: updated.version,
@@ -445,11 +444,10 @@ export const investorsRouter = router({
 
       return { success: true, newVersion: updated.version };
     }),
-  rejectJournal: publicProcedure
+  rejectJournal: protectedProcedure
     .input(
       z.object({
         journalId: z.number(),
-        rejectedBy: z.number().int(),
         reason: z.string().optional(),
       })
     )
@@ -470,7 +468,7 @@ export const investorsRouter = router({
         data: {
           status: "REJECTED",
           rejection_reason: input.reason ?? null,
-          approved_by: input.rejectedBy,
+          approved_by: ctx.session.user.id,
           approved_at: new Date(),
         },
       });

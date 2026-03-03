@@ -29,8 +29,8 @@ export function JournalTab({ selectedInvestor }: { selectedInvestor: string }) {
 
   const approveMutation = trpc.investors.approveJournal.useMutation({
     onSuccess: () => {
-      refetch();
       utils.investors.journals.invalidate({ investorId: selectedInvestor });
+      refetch();
     },
   });
   const rejectMutation = trpc.investors.rejectJournal.useMutation({
@@ -162,12 +162,10 @@ export function JournalTab({ selectedInvestor }: { selectedInvestor: string }) {
                             <Button
                               size="sm"
                               color="primary"
-                              isDisabled={!userId || approveMutation.isPending}
+                              isDisabled={approveMutation.isPending}
                               onClick={() => {
-                                if (!userId) return;
                                 approveMutation.mutate({
                                   journalId: j.id,
-                                  approvedBy: userId,
                                 });
                               }}
                             >
@@ -176,12 +174,10 @@ export function JournalTab({ selectedInvestor }: { selectedInvestor: string }) {
                             <Button
                               size="sm"
                               color="secondary"
-                              isDisabled={!userId || rejectMutation.isPending}
+                              isDisabled={rejectMutation.isPending}
                               onClick={() => {
-                                if (!userId) return;
                                 rejectMutation.mutate({
                                   journalId: j.id,
-                                  rejectedBy: userId,
                                   reason: rejectNotes[j.id],
                                 });
                               }}

@@ -20,7 +20,7 @@ export const importFromSiar = async () => {
 
   // import references
   const refCount = await siar.tReferenceDetail.count();
-  const ursRefCount = await prisma.references.count();
+  const ursRefCount = await prisma.references.count() + 2; // need to add by 2 because there is duplicate reference group
   console.log('ref count', refCount, ursRefCount)
   if (refCount > ursRefCount) {
     const references = await siar.tReferenceDetail.findMany({ include: { TReferenceGroup: true } });

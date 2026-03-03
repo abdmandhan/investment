@@ -96,9 +96,13 @@ model provinces {
   no          Int?
   name        String
   postal_code String?
-  type        String
+  type        String // province, city, district, subdistrict
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+
+  investorAddresses investor_addresses[]
+  parent            provinces?           @relation("parent", fields: [parent_id], references: [id])
+  provinces         provinces[]          @relation("parent")
 }
 
 model references {
@@ -391,20 +395,22 @@ model investor_heirs {
 }
 
 model investor_addresses {
-  id              Int      @id @default(autoincrement())
-  address_type_id String
-  investor_id     String
-  province_id     String
-  city_id         String
-  district_id     String
-  subdistrict_id  String
-  postal_code     String
-  address         String
-  address_line_2  String?
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  address_type_id  String //relation to references
+  investor_id      String
+  province_id      String
+  province_text    String? //provinsi
+  city_text        String? //kabupaten
+  district_text    String? //kecamatan
+  subdistrict_text String? //kelurahan
+  postal_code      String?
+  address          String
+  address_line_2   String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
   investor investors @relation(fields: [investor_id], references: [id])
+  province provinces @relation(fields: [province_id], references: [id])
 }
 
 model investor_banks {

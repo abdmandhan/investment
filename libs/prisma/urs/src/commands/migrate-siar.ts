@@ -7,6 +7,7 @@ import { migrateMissingTransactions } from './../siar/migrate-missing.js';
 import { migrateNav } from './../siar/nav.js';
 import { importFromSiar } from './../siar/references.js';
 import { importInvestorsFromSiar } from './../siar/investors.js';
+import { importProvincesFromSiar } from './../siar/provinces.js';
 import { importTransaction } from './../siar/transaction.js';
 import { fileURLToPath } from 'node:url';
 
@@ -17,11 +18,16 @@ type MigrationStep = {
 };
 
 const ALL_STEPS: MigrationStep[] = [
-  // {
-  //   name: 'references',
-  //   description: 'Import references, banks, agents, and funds from SIAR',
-  //   run: importFromSiar,
-  // },
+  {
+    name: 'references',
+    description: 'Import references, banks, agents, and funds from SIAR',
+    run: importFromSiar,
+  },
+  {
+    name: 'provinces',
+    description: 'Import provinces / regions from SIAR',
+    run: importProvincesFromSiar,
+  },
   {
     name: 'investors',
     description: 'Import investors and related data from SIAR',

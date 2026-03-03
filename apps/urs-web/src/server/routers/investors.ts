@@ -1,6 +1,6 @@
 import { Prisma } from "@investment/urs";
 import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
+import { router, publicProcedure, protectedProcedure } from "../trpc";
 import type { Context } from "../trpc";
 import type { Prisma as PrismaTypes } from "@investment/urs";
 
@@ -130,11 +130,10 @@ export const investorsRouter = router({
         limit,
       };
     }),
-  updateProfile: publicProcedure
+  updateProfile: protectedProcedure
     .input(
       z.object({
         id: z.string(),
-        requestedBy: z.number().int(),
         reason: z.string().optional(),
         data: z
           .object({
@@ -198,7 +197,7 @@ export const investorsRouter = router({
           entity_id: input.id,
           action: "UPDATE",
           status: "PENDING",
-          requested_by: input.requestedBy,
+          requested_by: ctx.session.user.id,
           requested_at: new Date(),
           reason: input.reason ?? null,
           entity_version: current.version,

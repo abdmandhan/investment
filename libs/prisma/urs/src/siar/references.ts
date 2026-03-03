@@ -207,54 +207,5 @@ export const importFromSiar = async () => {
     }
   }
 
-  // import investors
-  const investorCount = await siar.tCustomer.count();
-  const ursInvestorCount = await prisma.investors.count();
-  if (investorCount > ursInvestorCount) {
-    const investors = await siar.tCustomer.findMany({ include: { TAgentCustomer: true } });
-
-    for (let i = 0; i < investors.length; i++) {
-      const investor = investors[i];
-      const external_code = `SIAR-${investor.IDCustomer}`
-
-      console.log(`importing investor: ${investor.FirstName} ${investor.LastName}`)
-      const inv = await prisma.investors.upsert({
-        where: { external_code },
-        create: {
-          first_name: investor.FirstName || '',
-          middle_name: investor.MiddleName,
-          last_name: investor.LastName,
-          email: investor.Email?.trim() == '' ? null : investor.Email?.trim(),
-          phone_number: investor.MobilePhone?.trim() == '' ? null : investor.MobilePhone?.trim(),
-          sid: investor.UnitHolderIDNo,
-          investor_type_id: investor.InvestorType,
-          external_code,
-        },
-        update: {
-          first_name: investor.FirstName || '',
-          middle_name: investor.MiddleName,
-          last_name: investor.LastName,
-          email: investor.Email?.trim() == '' ? null : investor.Email?.trim(),
-          phone_number: investor.MobilePhone?.trim() == '' ? null : investor.MobilePhone?.trim(),
-          sid: investor.UnitHolderIDNo,
-          investor_type_id: investor.InvestorType,
-        }
-      })
-
-      if (investor.TAgentCustomer.length > 0) {
-        const firstAgent = investor.TAgentCustomer[0];
-        const agent = await prisma.agents.findFirst({ where: { code: `SIAR-${firstAgent.AgentId}` } })
-        if (agent) {
-          await prisma.agent_investors.upsert({
-            where: { agent_id_investor_id: { agent_id: agent.id, investor_id: inv.id } },
-            create: { agent_id: agent.id, investor_id: inv.id, effective_date: firstAgent.EffDate },
-            update: {}
-          })
-        } else {
-          console.log('agent not found', firstAgent)
-        }
-      }
-    }
-  }
 }
 

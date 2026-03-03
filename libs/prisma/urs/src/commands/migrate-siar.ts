@@ -6,6 +6,7 @@ import { generateHoldings } from './../siar/holdings.js';
 import { migrateMissingTransactions } from './../siar/migrate-missing.js';
 import { migrateNav } from './../siar/nav.js';
 import { importFromSiar } from './../siar/references.js';
+import { importInvestorsFromSiar } from './../siar/investors.js';
 import { importTransaction } from './../siar/transaction.js';
 import { fileURLToPath } from 'node:url';
 
@@ -16,36 +17,41 @@ type MigrationStep = {
 };
 
 const ALL_STEPS: MigrationStep[] = [
+  // {
+  //   name: 'references',
+  //   description: 'Import references, banks, agents, and funds from SIAR',
+  //   run: importFromSiar,
+  // },
   {
-    name: 'references',
-    description: 'Import references, banks, agents, funds, and investors from SIAR',
-    run: importFromSiar,
+    name: 'investors',
+    description: 'Import investors and related data from SIAR',
+    run: importInvestorsFromSiar,
   },
-  {
-    name: 'transactions',
-    description: 'Import approved transactions from SIAR',
-    run: importTransaction,
-  },
-  {
-    name: 'missing-transactions',
-    description: 'Reconcile and import missing SIAR transactions',
-    run: migrateMissingTransactions,
-  },
-  {
-    name: 'nav',
-    description: 'Import missing NAV records',
-    run: migrateNav,
-  },
-  {
-    name: 'management-fee',
-    description: 'Sync management fee and valuation basis',
-    run: importManagementFee,
-  },
-  {
-    name: 'holdings',
-    description: 'Generate investor holdings snapshots',
-    run: generateHoldings,
-  },
+  // {
+  //   name: 'transactions',
+  //   description: 'Import approved transactions from SIAR',
+  //   run: importTransaction,
+  // },
+  // {
+  //   name: 'missing-transactions',
+  //   description: 'Reconcile and import missing SIAR transactions',
+  //   run: migrateMissingTransactions,
+  // },
+  // {
+  //   name: 'nav',
+  //   description: 'Import missing NAV records',
+  //   run: migrateNav,
+  // },
+  // {
+  //   name: 'management-fee',
+  //   description: 'Sync management fee and valuation basis',
+  //   run: importManagementFee,
+  // },
+  // {
+  //   name: 'holdings',
+  //   description: 'Generate investor holdings snapshots',
+  //   run: generateHoldings,
+  // },
 ];
 
 function parseOption(name: string): string | undefined {

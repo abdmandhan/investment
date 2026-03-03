@@ -234,7 +234,7 @@ export const investorsRouter = router({
     .query(async ({ ctx, input }) => {
       const portfolio = await ctx.prisma.investor_holdings.findMany({
         where: { investor_id: input.id },
-        orderBy: { created_at: "desc" },
+        orderBy: { id: "desc" },
         distinct: ["fund_id"],
         select: { fund_id: true, units_after: true },
       });

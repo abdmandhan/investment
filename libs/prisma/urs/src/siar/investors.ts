@@ -7,10 +7,10 @@ export const importInvestorsFromSiar = async () => {
   const ursCount = await prisma.investors.count();
   console.log('investors count', count, ursCount);
 
-  if (count <= ursCount) {
-    console.log('investors already imported');
-    return;
-  }
+  // if (count <= ursCount) {
+  //   console.log('investors already imported');
+  //   return;
+  // }
 
 
   const customers = await siar.tCustomer.findMany({
@@ -23,8 +23,6 @@ export const importInvestorsFromSiar = async () => {
         },
       },
       TCustomerHeir: true,
-      TCustomerIndividual: true,
-      TCustomerInstitusi: true,
       TCustomerAuthContact: true,
     },
   });
@@ -118,7 +116,8 @@ export const importInvestorsFromSiar = async () => {
         }
 
         for (const heir of customer.TCustomerHeir) {
-          if (!heir.Name || heir.Name.trim() === '') {
+          if (!heir.Name || heir.Name.trim() === '' || heir.Relationship == null) {
+            console.log('heir is invalid', heir, customer.IDCustomer);
             continue;
           }
 
@@ -126,54 +125,57 @@ export const importInvestorsFromSiar = async () => {
             data: {
               investor_id: inv.id,
               name: heir.Name,
-              relation_id: heir.Relationship || 'UNKNOWN',
+              relation_id: heir.Relationship,
             },
           });
         }
 
-        if (customer.TCustomerIndividual && customer.InvestorType === 'I') {
-          const ind = customer.TCustomerIndividual;
+        if (customer.InvestorType === 'I') {
+          // validate inputs
+          if (customer.MotherName == null) {
+            console.log('mother name is null for investor', customer.IDCustomer);
+          } else {
+            await prisma.investor_individuals.create({
+              data: {
+                investor_id: inv.id,
+                birth_date: customer.BirthDate ?? new Date('1970-01-01'),
+                birth_place: customer.BirthPlace ?? '',
+                mother_name: customer.MotherName,
+                is_employee: false,
+                tax_number: customer.NPWP ?? '',
+                tax_effective_date: customer.NPWPIssuedDate ?? new Date('1970-01-01'),
+                gender_id: customer.IDSex ?? '',
+                education_id: customer.IDEducation ?? '',
+                card_type_id: customer.IDType ?? '',
+                card_number: customer.IDNumber ?? '',
+                income_id: customer.IDIncome ?? '',
+                income_source_id: customer.IDSourceOfFunds ?? '',
+                marital_id: customer.IDMaritalStatus ?? '',
+                nationality_id: customer.IDNationality ?? '',
+                job_id: customer.IDOccupation ?? '',
+                job_category_id: '',
+                job_role_id: '',
+              },
+            });
+          }
 
-          await prisma.investor_individuals.create({
-            data: {
-              investor_id: inv.id,
-              birth_date: customer.BirthDate ?? new Date('1970-01-01'),
-              birth_place: customer.BirthPlace ?? '',
-              mother_name: ind.NamaIbuKandungSebelumMenikah ?? customer.MotherName ?? '',
-              is_employee: false,
-              tax_number: ind.NPWP ?? customer.NPWP ?? '',
-              tax_effective_date: customer.NPWPIssuedDate ?? new Date('1970-01-01'),
-              gender_id: ind.JenisKelaminID != null ? String(ind.JenisKelaminID) : '',
-              education_id: ind.PendidikanID != null ? String(ind.PendidikanID) : '',
-              card_type_id: '',
-              card_number: ind.NoID ?? '',
-              income_id: '',
-              income_source_id: '',
-              marital_id: ind.StatusPernikahanID != null ? String(ind.StatusPernikahanID) : '',
-              nationality_id: ind.KewarganegaraanID != null ? String(ind.KewarganegaraanID) : customer.IDNationality ?? '',
-              job_id: '',
-              job_category_id: '',
-              job_role_id: '',
-            },
-          });
+
         }
 
-        if (customer.TCustomerInstitusi && customer.InvestorType !== 'I') {
-          const corp = customer.TCustomerInstitusi;
-
+        if (customer.InvestorType !== 'I') {
           await prisma.investor_corporates.create({
             data: {
               investor_id: inv.id,
-              tax_number: corp.NPWP ?? '',
-              reg_date: corp.TglRegistrasi ?? new Date('1970-01-01'),
-              siup: corp.SIUP ?? '',
-              tdp_number: corp.NoTDP ?? '',
-              tdp_reg_date: corp.TglRegTDP ?? new Date('1970-01-01'),
-              skd_reg_date: corp.TglRegSKD ?? new Date('1970-01-01'),
-              establish_date: corp.TglBerdiri ?? new Date('1970-01-01'),
-              phone_number: corp.NoTelp ?? '',
-              fax_number: corp.NoFax ?? '',
-              corporate_legal_id: corp.BadanHukum ?? '',
+              tax_number: customer.NPWP ?? '',
+              reg_date: customer.OpDate ?? new Date('1970-01-01'),
+              siup: customer.SIUP ?? '',
+              tdp_number: customer.NoTDP ?? '',
+              tdp_reg_date: customer.TDPRegDate ?? new Date('1970-01-01'),
+              skd_reg_date: customer.SKDExpired ?? new Date('1970-01-01'),
+              establish_date: customer.EstablishDate ?? new Date('1970-01-01'),
+              phone_number: customer.OfficePhone ?? '',
+              fax_number: customer.Fax ?? '',
+              corporate_legal_id: customer.CompanyCharacteristic ?? '',
             },
           });
         }

@@ -200,6 +200,7 @@ model funds {
   investor_holdings  investor_holdings[]
   aum_investor_daily aum_investor_daily[]
   fund_banks         fund_banks[]
+  transactions       transactions[]
 }
 
 model fund_navs {
@@ -275,6 +276,7 @@ model agents {
   agent_child        agents[]             @relation("agent_parent")
   aum_investor_daily aum_investor_daily[]
   agent_investors    agent_investors[]
+  transactions       transactions[]
 }
 
 model agent_investors {
@@ -297,6 +299,7 @@ model investors {
   first_name    String  @db.VarChar(128)
   middle_name   String? @db.VarChar(128)
   last_name     String? @db.VarChar(128)
+  full_name     String  @default("") @db.VarChar(256) // first_name + middle_name + last_name -> full name for display, use for display purposes
   email         String?
   phone_number  String? @db.VarChar(32)
   risk_level_id Int?
@@ -339,14 +342,14 @@ model investor_accounts {
 }
 
 model investor_individuals {
-  id                 Int      @id @default(autoincrement())
-  investor_id        String   @unique
+  id                 Int       @id @default(autoincrement())
+  investor_id        String    @unique
   birth_date         DateTime
   birth_place        String
   mother_name        String
   is_employee        Boolean
   tax_number         String
-  tax_effective_date DateTime
+  tax_effective_date DateTime?
   gender_id          String
   education_id       String
   card_type_id       String
@@ -355,11 +358,11 @@ model investor_individuals {
   income_source_id   String
   marital_id         String
   nationality_id     String
-  job_id             String
-  job_category_id    String
-  job_role_id        String
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  job_id             String?
+  job_category_id    String?
+  job_role_id        String?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
 
   investor investors @relation(fields: [investor_id], references: [id])
 }
@@ -493,6 +496,8 @@ model transactions {
   transaction_banks transaction_banks[]
   investor_holdings investor_holdings[]
   investor          investors           @relation(fields: [investor_id], references: [id])
+  fund              funds               @relation(fields: [fund_id], references: [id])
+  agent             agents              @relation(fields: [agent_id], references: [id])
 }
 
 // tracking transfer history
